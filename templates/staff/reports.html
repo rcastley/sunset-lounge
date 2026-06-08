@@ -21,19 +21,19 @@
   <section class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
     <div class="bg-white/80 rounded-2xl p-5 border border-sand shadow-card">
       <p class="text-[10px] uppercase tracking-[0.25em] text-ember/70">Revenue</p>
-      <p class="font-display text-3xl md:text-4xl text-ink mt-2 leading-none">£{{ '%.0f'|format(revenue_cents/100) }}</p>
+      <p class="text-4xl md:text-5xl font-bold tracking-tight tabular-nums text-ink mt-2 leading-none">£{{ '%.0f'|format(revenue_cents/100) }}</p>
     </div>
     <div class="bg-ink text-cream rounded-2xl p-5 shadow-card">
       <p class="text-[10px] uppercase tracking-[0.25em] text-peach">Sessions</p>
-      <p class="font-display text-3xl md:text-4xl mt-2 leading-none">{{ sessions_count }}</p>
+      <p class="text-4xl md:text-5xl font-bold tracking-tight tabular-nums mt-2 leading-none">{{ sessions_count }}</p>
     </div>
     <div class="bg-gradient-to-br from-coral via-terracotta to-ember text-cream rounded-2xl p-5 shadow-card">
       <p class="text-[10px] uppercase tracking-[0.25em] text-cream/85">Minutes used</p>
-      <p class="font-display text-3xl md:text-4xl mt-2 leading-none">{{ sessions_minutes }}</p>
+      <p class="text-4xl md:text-5xl font-bold tracking-tight tabular-nums mt-2 leading-none">{{ sessions_minutes }}</p>
     </div>
     <div class="bg-white/80 rounded-2xl p-5 border border-sand shadow-card">
       <p class="text-[10px] uppercase tracking-[0.25em] text-ember/70">New clients</p>
-      <p class="font-display text-3xl md:text-4xl text-ink mt-2 leading-none">{{ new_clients }}</p>
+      <p class="text-4xl md:text-5xl font-bold tracking-tight tabular-nums text-ink mt-2 leading-none">{{ new_clients }}</p>
     </div>
   </section>
 
@@ -49,7 +49,7 @@
           <li>
             <div class="flex items-baseline justify-between text-sm">
               <span class="text-ink font-semibold">{{ b.name }}</span>
-              <span class="text-ink/60"><span class="font-semibold text-ink">{{ b.sessions }}</span> · {{ b.minutes }} min</span>
+              <span class="text-ink/60"><span class="font-semibold tabular-nums text-ink">{{ b.sessions }}</span> · {{ b.minutes }} min</span>
             </div>
             <div class="h-1.5 bg-sand rounded-full mt-1.5 overflow-hidden">
               <div class="h-full bg-gradient-to-r from-blush to-terracotta rounded-full"
@@ -75,7 +75,7 @@
               <p class="text-ink text-sm font-semibold truncate">{{ p.package_name }}</p>
               <p class="text-xs text-ink/50">£{{ '%.2f'|format(p.total_cents/100) }} total</p>
             </div>
-            <span class="text-base font-semibold text-terracotta whitespace-nowrap">×{{ p.sold }}</span>
+            <span class="text-base font-semibold tabular-nums text-terracotta whitespace-nowrap">{{ p.sold }}</span>
           </li>
           {% endfor %}
         </ul>
@@ -96,7 +96,7 @@
               <p class="text-ink text-sm font-semibold truncate">{{ c.first_name }} {{ c.last_name }}</p>
               <p class="text-xs text-ink/50">{{ c.minutes }} min total</p>
             </div>
-            <span class="text-base font-semibold text-ember whitespace-nowrap">{{ c.sessions }}</span>
+            <span class="text-base font-semibold tabular-nums text-ember whitespace-nowrap">{{ c.sessions }}</span>
           </li>
           {% endfor %}
         </ul>

@@ -207,6 +207,11 @@ def _clear_login_failures():
     LOGIN_FAILURES.pop(_login_key(), None)
 
 
+@app.errorhandler(404)
+def not_found(_):
+    return render_template("404.html"), 404
+
+
 @app.context_processor
 def inject_globals():
     return {

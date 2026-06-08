@@ -17,11 +17,11 @@
       <div class="grid grid-cols-3 gap-3 md:gap-4 mt-6">
         <div class="bg-white/80 backdrop-blur rounded-3xl p-5 border border-sand shadow-card anim-up delay-1">
           <p class="text-[10px] uppercase tracking-[0.25em] text-ember/70">Sessions today</p>
-          <p class="font-display text-4xl md:text-5xl text-ink mt-2 leading-none">{{ sessions_today }}</p>
+          <p class="text-5xl md:text-6xl font-bold tracking-tight tabular-nums text-ink mt-2 leading-none">{{ sessions_today }}</p>
         </div>
         <div class="bg-ink text-cream rounded-3xl p-5 shadow-card anim-up delay-2">
           <p class="text-[10px] uppercase tracking-[0.25em] text-peach">New this week</p>
-          <p class="font-display text-4xl md:text-5xl mt-2 leading-none">{{ new_clients_week }}</p>
+          <p class="text-5xl md:text-6xl font-bold tracking-tight tabular-nums mt-2 leading-none">{{ new_clients_week }}</p>
         </div>
         <a href="{{ url_for('staff_clients') }}"
            class="group bg-gradient-to-br from-coral via-terracotta to-ember text-cream rounded-3xl p-5 shadow-card anim-up delay-3 flex flex-col justify-between hover:opacity-95 transition">

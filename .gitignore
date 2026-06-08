@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Local database — contains client PII, never commit
+sunset_lounge.db
+sunset_lounge.db-journal
+sunset_lounge.db-wal
+sunset_lounge.db-shm
+
+# Local environment files
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# Editor caches
+.vscode/
+.idea/
+*.swp

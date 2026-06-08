@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Register — Sunset Lounge{% endblock %}
+{% block body %}
+<main class="min-h-screen sunset-bg-soft flex flex-col">
+  <header class="flex-shrink-0 px-8 lg:px-12 pt-6 pb-4 flex items-center justify-between">
+    <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 text-ink/60 hover:text-ink">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Back
+    </a>
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-full bg-gradient-to-br from-peach via-coral to-ember shadow-sun"></div>
+      <span class="font-display text-base text-ink">Sunset Lounge</span>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto px-8 lg:px-12">
+    <div class="max-w-4xl mx-auto pt-2 pb-6">
+      <p class="uppercase tracking-[0.35em] text-xs text-terracotta">New client</p>
+      <h1 class="font-display text-4xl lg:text-5xl text-ink mt-2 leading-tight">Tell us about you.</h1>
+
+      {% if errors %}
+      <div class="mt-5 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-ember">
+        <p class="font-medium mb-1">A few things to fix:</p>
+        <ul class="list-disc list-inside text-sm text-ember/90">
+          {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <form id="reg-form" method="post" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div>
+          <label class="label">First name</label>
+          <input class="field !text-xl !py-4" name="first_name" value="{{ form.get('first_name','') }}" required autofocus />
+        </div>
+        <div>
+          <label class="label">Last name</label>
+          <input class="field !text-xl !py-4" name="last_name" value="{{ form.get('last_name','') }}" required />
+        </div>
+        <div>
+          <label class="label">Phone</label>
+          <input class="field !text-xl !py-4" name="phone" type="tel" inputmode="tel" value="{{ form.get('phone','') }}" />
+        </div>
+        <div>
+          <label class="label">Email</label>
+          <input class="field !text-xl !py-4" name="email" type="email" inputmode="email" value="{{ form.get('email','') }}" />
+        </div>
+        <div>
+          <label class="label">Date of birth</label>
+          <input class="field !text-xl !py-4" name="birthdate" type="date" value="{{ form.get('birthdate','') }}" />
+        </div>
+        <div>
+          <label class="label">Skin notes <span class="text-ink/40 normal-case tracking-normal text-[10px]">(optional)</span></label>
+          <textarea class="field !text-lg !py-3" name="notes" rows="2" placeholder="fair skin, easily burns…">{{ form.get('notes','') }}</textarea>
+        </div>
+
+        <label class="md:col-span-2 flex items-center gap-4 bg-white/80 border border-sand rounded-2xl px-5 py-4 cursor-pointer hover:bg-white transition">
+          <input type="checkbox" name="consent" class="w-6 h-6 accent-terracotta flex-shrink-0" {% if form.get('consent') %}checked{% endif %} />
+          <span class="text-ink/85 leading-snug">I'm 18 or over and have read the tanning safety information.</span>
+        </label>
+      </form>
+    </div>
+  </div>
+
+  <footer class="flex-shrink-0 px-8 lg:px-12 py-4 bg-cream/95 backdrop-blur border-t border-sand">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
+      <a href="{{ url_for('index') }}" class="btn-ghost !px-6 !py-3 !text-base">Cancel</a>
+      <button form="reg-form" type="submit" class="btn-sunset !px-8 !py-4 !text-lg flex-1 md:flex-initial md:min-w-[320px]">
+        Complete registration
+        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </footer>
+</main>
+{% endblock %}

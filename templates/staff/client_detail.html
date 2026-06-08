@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}{{ client.first_name }} {{ client.last_name }} — Sunset Lounge{% endblock %}
+{% block body %}
+{% include 'partials/_staff_nav.html' %}
+<main>
+  <header class="relative overflow-hidden">
+    <div class="absolute inset-0 sunset-bg-soft"></div>
+    <div class="absolute inset-0 grain opacity-20"></div>
+    <div class="relative max-w-7xl mx-auto px-6 md:px-10 pt-6 pb-14">
+      <a href="{{ url_for('staff_dashboard') }}" class="text-ink/60 hover:text-ink text-sm inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        Dashboard
+      </a>
+
+      <div class="mt-5 grid grid-cols-[1fr,auto] gap-6 items-center">
+        <div class="min-w-0">
+          <p class="uppercase tracking-[0.35em] text-[10px] text-terracotta">Client</p>
+          <h1 class="font-display text-3xl md:text-5xl text-ink mt-2 leading-tight truncate">
+            {{ client.first_name }} <em class="italic">{{ client.last_name }}</em>
+          </h1>
+          <p class="mt-2 text-ink/60 text-sm md:text-base">
+            {% if client.phone %}{{ client.phone }}{% endif %}
+            {% if client.email %}{% if client.phone %} · {% endif %}{{ client.email }}{% endif %}
+            {% if not client.phone and not client.email %}<span class="text-ink/40">No contact on file</span>{% endif %}
+          </p>
+        </div>
+        <div class="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0">
+          <div class="ring-balance rounded-full w-full h-full" style="--pct: {{ pct }}%;"></div>
+          <div class="absolute inset-2 rounded-full bg-cream flex flex-col items-center justify-center text-center">
+            <p class="font-display text-3xl md:text-4xl text-ink leading-none">{{ balance }}</p>
+            <p class="text-[9px] uppercase tracking-[0.25em] text-ink/50 mt-1">min left</p>
+          </div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mt-5 space-y-2 anim-up">
+          {% for cat, msg in messages %}
+            {% if cat == 'error' %}
+              <p class="rounded-2xl border border-coral/40 bg-coral/10 text-ember px-4 py-2.5 text-sm">{{ msg }}</p>
+            {% else %}
+              <p class="rounded-2xl border border-peach/50 bg-peach/15 text-ember px-4 py-2.5 text-sm">{{ msg }}</p>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+      {% if request.args.get('sold') %}
+      <div class="mt-5 inline-flex items-center gap-3 bg-ink text-cream rounded-full px-5 py-2 shadow-card anim-up text-sm">
+        <span class="w-2 h-2 rounded-full bg-peach animate-pulse"></span>
+        Package added — balance updated.
+      </div>
+      {% endif %}
+      {% if request.args.get('logged') %}
+      <div class="mt-5 inline-flex items-center gap-3 bg-ink text-cream rounded-full px-5 py-2 shadow-card anim-up text-sm">
+        <span class="w-2 h-2 rounded-full bg-peach animate-pulse"></span>
+        Session logged.
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <section class="max-w-7xl mx-auto px-6 md:px-10 -mt-7 grid grid-cols-2 gap-3 relative z-10">
+    <a href="{{ url_for('staff_sell', cid=client.id) }}"
+       class="group bg-ink text-cream rounded-2xl p-5 shadow-card hover:bg-plum transition flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <p class="text-peach text-[10px] uppercase tracking-[0.25em]">Add minutes</p>
+        <p class="font-display text-xl md:text-2xl mt-1">Sell a package</p>
+      </div>
+      <svg class="w-6 h-6 group-hover:translate-x-1 transition flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </a>
+    <a href="{{ url_for('staff_checkin', cid=client.id) }}"
+       class="group bg-gradient-to-br from-coral via-terracotta to-ember text-cream rounded-2xl p-5 shadow-sun hover:opacity-95 transition flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <p class="text-cream/80 text-[10px] uppercase tracking-[0.25em]">Use minutes</p>
+        <p class="font-display text-xl md:text-2xl mt-1">Log a session</p>
+      </div>
+      <svg class="w-6 h-6 group-hover:translate-x-1 transition flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </a>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 md:px-10 mt-4">
+    <details class="bg-white rounded-2xl border border-sand shadow-card group">
+      <summary class="cursor-pointer px-5 py-3.5 flex items-center justify-between list-none">
+        <span class="text-terracotta text-[10px] uppercase tracking-[0.22em] inline-flex items-center gap-2">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          <span class="group-open:hidden">Edit details</span>
+          <span class="hidden group-open:inline">Close</span>
+        </span>
+        <svg class="w-4 h-4 text-ink/40 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+      </summary>
+      <form method="post" action="{{ url_for('staff_client_edit', cid=client.id) }}" class="px-5 pb-5 pt-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div>
+          <label class="label">First name</label>
+          <input class="field !text-base !py-2.5" name="first_name" value="{{ client.first_name }}" required />
+        </div>
+        <div>
+          <label class="label">Last name</label>
+          <input class="field !text-base !py-2.5" name="last_name" value="{{ client.last_name }}" required />
+        </div>
+        <div>
+          <label class="label">Phone</label>
+          <input class="field !text-base !py-2.5" name="phone" type="tel" inputmode="tel" value="{{ client.phone or '' }}" />
+        </div>
+        <div>
+          <label class="label">Email</label>
+          <input class="field !text-base !py-2.5" name="email" type="email" inputmode="email" value="{{ client.email or '' }}" />
+        </div>
+        <div>
+          <label class="label">Date of birth</label>
+          <input class="field !text-base !py-2.5" name="birthdate" type="date" value="{{ client.birthdate or '' }}" />
+        </div>
+        <div>
+          <label class="label">Skin notes</label>
+          <input class="field !text-base !py-2.5" name="notes" value="{{ client.notes or '' }}" maxlength="200" />
+        </div>
+        <div class="md:col-span-2 flex justify-end">
+          <button class="btn-primary !px-5 !py-2 !text-sm">Save changes</button>
+        </div>
+      </form>
+    </details>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 md:px-10 mt-6 pb-12 grid md:grid-cols-5 gap-4">
+    <div class="md:col-span-3 bg-white rounded-2xl border border-sand shadow-card">
+      <div class="px-5 py-4 border-b border-sand flex items-baseline justify-between">
+        <h2 class="font-display text-xl text-ink">Sessions</h2>
+        <span class="text-[10px] uppercase tracking-[0.22em] text-ink/50">Recent 25</span>
+      </div>
+      {% if sessions %}
+      <ul>
+        {% for s in sessions %}
+        <li class="px-5 py-3 grid grid-cols-12 items-center border-b border-sand/60 last:border-b-0 gap-2">
+          <div class="col-span-6">
+            <p class="text-ink text-sm">{{ s.session_at.replace('T',' • ') }}</p>
+          </div>
+          <div class="col-span-3 text-ink/60 text-sm">{{ s.bed }}</div>
+          <div class="col-span-3 text-right">
+            <span class="font-display text-lg text-ember">−{{ s.minutes }}</span>
+            <span class="text-ink/40 text-xs ml-0.5">min</span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="px-5 py-8 text-ink/50 text-sm">No sessions logged yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="md:col-span-2 space-y-4">
+      <div class="bg-white rounded-2xl border border-sand shadow-card">
+        <div class="px-5 py-4 border-b border-sand">
+          <h2 class="font-display text-xl text-ink">Packages</h2>
+        </div>
+        {% if packages %}
+        <ul>
+          {% for p in packages %}
+          <li class="px-5 py-3 flex items-center justify-between border-b border-sand/60 last:border-b-0 gap-3">
+            <div class="min-w-0">
+              <p class="text-ink text-sm">{{ p.package_name }}</p>
+              <p class="text-xs text-ink/50">{{ p.purchased_at[:10] }} · £{{ '%.2f'|format(p.price_cents/100) }}</p>
+            </div>
+            <span class="font-display text-lg text-terracotta whitespace-nowrap">
+              +{{ p.minutes }}<span class="text-ink/40 text-xs ml-0.5">min</span>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="px-5 py-6 text-ink/50 text-sm">No packages yet.</p>
+        {% endif %}
+      </div>
+
+      {% if client.notes %}
+      <div class="bg-sand/50 rounded-2xl p-5 border border-sand">
+        <p class="text-[10px] uppercase tracking-[0.25em] text-ember/70 mb-1.5">Skin notes</p>
+        <p class="text-ink/80 italic leading-snug text-sm">{{ client.notes }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+</main>
+{% endblock %}

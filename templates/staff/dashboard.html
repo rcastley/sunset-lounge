@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Staff Portal — Sunset Lounge{% endblock %}
+{% block body %}
+<div class="min-h-screen flex flex-col">
+  {% include 'partials/_staff_nav.html' %}
+
+  <header class="relative overflow-hidden">
+    <div class="absolute inset-0 sunset-bg-soft"></div>
+    <div class="absolute inset-0 grain opacity-25 pointer-events-none"></div>
+    <div class="relative max-w-7xl mx-auto px-6 md:px-10 pt-8 pb-16">
+      <p class="uppercase tracking-[0.35em] text-[10px] text-terracotta">{{ now().strftime('%A %-d %B') }}</p>
+      <h1 class="font-display text-3xl md:text-5xl text-ink mt-2 leading-tight">
+        Good {% set h = now().hour %}{% if h < 12 %}morning{% elif h < 17 %}afternoon{% else %}evening{% endif %},
+        <em class="italic text-terracotta">{{ staff.name }}</em>.
+      </h1>
+
+      <div class="grid grid-cols-3 gap-3 md:gap-4 mt-6">
+        <div class="bg-white/80 backdrop-blur rounded-3xl p-5 border border-sand shadow-card anim-up delay-1">
+          <p class="text-[10px] uppercase tracking-[0.25em] text-ember/70">Sessions today</p>
+          <p class="font-display text-4xl md:text-5xl text-ink mt-2 leading-none">{{ sessions_today }}</p>
+        </div>
+        <div class="bg-ink text-cream rounded-3xl p-5 shadow-card anim-up delay-2">
+          <p class="text-[10px] uppercase tracking-[0.25em] text-peach">New this week</p>
+          <p class="font-display text-4xl md:text-5xl mt-2 leading-none">{{ new_clients_week }}</p>
+        </div>
+        <a href="{{ url_for('staff_clients') }}"
+           class="group bg-gradient-to-br from-coral via-terracotta to-ember text-cream rounded-3xl p-5 shadow-card anim-up delay-3 flex flex-col justify-between hover:opacity-95 transition">
+          <p class="text-[10px] uppercase tracking-[0.25em] text-cream/80">Roster</p>
+          <span class="font-display text-xl md:text-2xl mt-2 inline-flex items-center gap-1.5 leading-tight">
+            Browse clients
+            <svg class="w-5 h-5 group-hover:translate-x-1 transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section class="-mt-10 relative z-10">
+    <div class="max-w-7xl mx-auto px-6 md:px-10">
+      <div class="bg-cream rounded-3xl border border-sand shadow-card p-5">
+        <label class="label">Find a client</label>
+        <div class="relative">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink/40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1 0 6.15 6.15a7.5 7.5 0 0 0 10.5 10.5z"/></svg>
+          <input type="search" name="q" placeholder="Start typing a name or phone number…"
+                 class="w-full bg-cream pl-11 pr-9 py-3.5 text-lg rounded-2xl border-2 border-sand focus:border-coral outline-none transition"
+                 hx-get="{{ url_for('staff_clients_search') }}"
+                 hx-trigger="input changed delay:200ms, search"
+                 hx-target="#search-results"
+                 hx-indicator="#search-indicator"
+                 autocomplete="off" />
+          <span id="search-indicator" class="htmx-indicator absolute right-4 top-1/2 -translate-y-1/2 text-terracotta text-sm font-medium">…</span>
+        </div>
+        <div id="search-results" class="mt-2"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-6 md:px-10 mt-8 pb-10">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 class="font-display text-2xl text-ink">Recent guests</h2>
+      <a href="{{ url_for('staff_clients') }}" class="text-terracotta text-[10px] uppercase tracking-[0.25em] hover:underline">See everyone →</a>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      {% for c in recent %}
+      <a href="{{ url_for('staff_client_detail', cid=c.id) }}"
+         class="block bg-white rounded-2xl border border-sand p-4 shadow-card hover:-translate-y-0.5 transition">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="font-display text-lg text-ink leading-tight truncate">{{ c.first_name }} {{ c.last_name }}</p>
+            <p class="text-ink/50 text-xs mt-0.5">
+              {% if c.last_visit %}Last visit {{ c.last_visit[:10] }}{% else %}No visits yet{% endif %}
+            </p>
+          </div>
+          <span class="chip flex-shrink-0 {% if c.balance > 0 %}bg-coral/15 text-terracotta{% else %}bg-ink/10 text-ink/60{% endif %}">
+            {{ c.balance }} min
+          </span>
+        </div>
+      </a>
+      {% else %}
+      <p class="text-ink/50 col-span-full">No guests yet — register one from the kiosk.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

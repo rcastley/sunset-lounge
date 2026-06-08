@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Log session — {{ client.first_name }}{% endblock %}
+{% block body %}
+{% include 'partials/_staff_nav.html' %}
+<main class="max-w-5xl mx-auto px-6 md:px-10 py-8">
+  <a href="{{ url_for('staff_client_detail', cid=client.id) }}"
+     class="text-ink/60 hover:text-ink inline-flex items-center gap-2 text-sm">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    Back to {{ client.first_name }}
+  </a>
+
+  <header class="mt-4 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="uppercase tracking-[0.35em] text-[10px] text-terracotta">Log a session</p>
+      <h1 class="font-display text-3xl md:text-4xl text-ink mt-2 leading-tight">{{ client.first_name }}'s glow.</h1>
+    </div>
+    <div class="text-right">
+      <p class="text-[10px] uppercase tracking-[0.28em] text-ink/50">Balance</p>
+      <p class="font-display text-3xl text-ink leading-none">{{ balance }} <span class="text-sm text-ink/40">min</span></p>
+    </div>
+  </header>
+
+  {% if balance <= 0 %}
+  <div class="mt-5 rounded-2xl border border-coral/40 bg-coral/10 text-ember px-5 py-4 flex items-center justify-between gap-4">
+    <p class="leading-snug">
+      <strong>No minutes available.</strong> {{ client.first_name }} needs a package before this session can be logged.
+    </p>
+    <a href="{{ url_for('staff_sell', cid=client.id) }}" class="btn-primary !py-2.5 !px-5 !text-sm whitespace-nowrap">Sell a package</a>
+  </div>
+  {% else %}
+
+  {% if error %}
+  <p class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 text-ember px-4 py-2.5 text-sm">{{ error }}</p>
+  {% endif %}
+
+  <form method="post" class="mt-6 space-y-6" id="checkinForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div>
+      <label class="label">Which bed?</label>
+      <div class="grid grid-cols-{{ beds|length if beds|length < 4 else 3 }} gap-3 mt-1.5">
+        {% for b in beds %}
+        {% set over = b.pct >= 100 %}
+        {% set warn = b.pct >= 80 and not over %}
+        <label class="cursor-pointer">
+          <input type="radio" name="bed_id" value="{{ b.id }}" class="peer sr-only" required />
+          <div class="rounded-2xl border-2 border-sand bg-white p-4 md:p-5 transition relative overflow-hidden
+                      peer-checked:border-coral peer-checked:bg-gradient-to-br
+                      peer-checked:from-blush/50 peer-checked:to-peach/40 peer-checked:shadow-sun
+                      hover:bg-sand/30">
+            <p class="font-display text-2xl md:text-3xl text-ink text-center">{{ b.name }}</p>
+            <div class="mt-2 h-1.5 rounded-full bg-sand overflow-hidden">
+              <div class="h-full rounded-full
+                          {% if over %}bg-gradient-to-r from-coral to-ember
+                          {% elif warn %}bg-gradient-to-r from-peach to-coral
+                          {% else %}bg-gradient-to-r from-blush to-terracotta{% endif %}"
+                   style="width: {{ [b.pct, 100]|min }}%;"></div>
+            </div>
+            <p class="text-[10px] mt-1.5 text-center {% if over %}text-ember font-medium{% elif warn %}text-terracotta{% else %}text-ink/50{% endif %}">
+              {{ '%.0f'|format(b.hours_used) }} / {{ b.tube_lifetime_hours }} hr
+              {% if over %}· replace{% endif %}
+            </p>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      {% if not beds %}
+      <p class="mt-2 rounded-2xl border border-coral/40 bg-coral/10 text-ember px-4 py-2.5 text-sm">
+        No active beds — <a class="underline" href="{{ url_for('staff_beds') }}">add one first</a>.
+      </p>
+      {% endif %}
+    </div>
+
+    <div>
+      <label class="label">Minutes used <span class="normal-case tracking-normal text-ink/40 text-[10px]">(max {{ balance }})</span></label>
+      <div class="grid grid-cols-6 gap-2 mt-1.5">
+        {% for m in [5,8,10,12,15,20] %}
+        <button type="button"
+                class="quick-min rounded-xl border-2 border-sand bg-white py-3 md:py-3.5 font-display text-xl md:text-2xl text-ink transition
+                       {% if m > balance %}opacity-30 cursor-not-allowed{% else %}hover:border-coral{% endif %}"
+                data-m="{{ m }}"
+                {% if m > balance %}disabled{% endif %}>{{ m }}</button>
+        {% endfor %}
+      </div>
+      <input class="field !text-lg !py-3 mt-3" name="minutes" type="number" inputmode="numeric"
+             min="1" max="{{ balance }}" id="minutesInput"
+             placeholder="…or type a custom amount" required />
+    </div>
+
+    <div>
+      <label class="label">When</label>
+      <input class="field !text-lg !py-3" type="datetime-local" name="session_at" value="{{ default_dt }}" />
+    </div>
+
+    <div class="flex flex-col-reverse md:flex-row gap-3 justify-between items-stretch md:items-center pt-2">
+      <a href="{{ url_for('staff_client_detail', cid=client.id) }}" class="btn-ghost !py-3 !px-6 !text-base w-full md:w-auto">Cancel</a>
+      <button class="btn-sunset !py-3 !px-8 !text-base w-full md:w-auto">Log session</button>
+    </div>
+  </form>
+
+  <script>
+    document.querySelectorAll('.quick-min:not([disabled])').forEach(b => {
+      b.addEventListener('click', () => {
+        document.getElementById('minutesInput').value = b.dataset.m;
+        document.querySelectorAll('.quick-min').forEach(x => {
+          x.classList.remove('border-coral', 'bg-blush/30', 'text-terracotta');
+        });
+        b.classList.add('border-coral', 'bg-blush/30', 'text-terracotta');
+      });
+    });
+  </script>
+  {% endif %}
+</main>
+{% endblock %}

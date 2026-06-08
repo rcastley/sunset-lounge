@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Welcome — Sunset Lounge{% endblock %}
+{% block body %}
+<main class="h-screen sunset-bg-soft relative overflow-hidden flex flex-col">
+  <div class="absolute inset-0 grain opacity-25 pointer-events-none"></div>
+
+  <header class="relative px-10 pt-6 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-gradient-to-br from-peach via-coral to-ember shadow-sun"></div>
+      <span class="font-display text-xl text-ink">Sunset Lounge</span>
+    </div>
+    <span class="text-ink/60 uppercase tracking-[0.3em] text-xs">{{ now().strftime('%H:%M') }}</span>
+  </header>
+
+  <section class="relative flex-1 flex flex-col items-center justify-center px-8 text-center min-h-0">
+    <div class="relative w-40 h-40 lg:w-48 lg:h-48 anim-sun-rise flex-shrink-0">
+      <div class="absolute inset-0 rounded-full bg-gradient-to-br from-peach via-coral to-terracotta shadow-sun"></div>
+      <div class="absolute inset-3 rounded-full bg-gradient-to-br from-blush to-peach/60 mix-blend-screen"></div>
+    </div>
+    <div class="horizon-line h-px w-72 mt-3 mb-8"></div>
+
+    <p class="uppercase tracking-[0.4em] text-xs text-terracotta anim-up delay-1">Welcome</p>
+    <h1 class="font-display text-5xl lg:text-7xl mt-3 anim-up delay-2 text-ink leading-[1.05]">
+      Your <em class="italic shimmer-text">golden hour</em> awaits.
+    </h1>
+    <p class="mt-5 text-lg lg:text-xl text-ink/70 max-w-md anim-up delay-3">
+      First time with us? Take a moment to tell us about you. Otherwise, our team will look after you at the desk.
+    </p>
+  </section>
+
+  <footer class="relative px-8 pb-10 flex justify-center anim-up delay-4 flex-shrink-0">
+    <a href="{{ url_for('kiosk_register') }}"
+       class="btn-sunset w-full md:w-auto md:min-w-[440px] !px-12 !py-6 !text-2xl">
+      I'm new — let's begin
+      <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </a>
+  </footer>
+</main>
+{% endblock %}

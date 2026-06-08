@@ -1,0 +1,17 @@
+<nav class="bg-cream/90 backdrop-blur border-b border-sand sticky top-0 z-20">
+  <div class="max-w-7xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
+    <a href="{{ url_for('staff_dashboard') }}" class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-peach via-coral to-ember shadow-sun"></div>
+      <span class="font-display text-xl text-ink">Sunset Lounge</span>
+      <span class="chip bg-ink/5 text-ink/60 ml-2 hidden md:inline">Staff</span>
+    </a>
+    <div class="flex items-center gap-1">
+      <a href="{{ url_for('staff_dashboard') }}" class="px-4 py-2 rounded-full text-ink/70 hover:bg-ink/5 hidden md:inline-block text-sm">Today</a>
+      <a href="{{ url_for('staff_clients') }}" class="px-4 py-2 rounded-full text-ink/70 hover:bg-ink/5 hidden md:inline-block text-sm">Clients</a>
+      <a href="{{ url_for('staff_packages') }}" class="px-4 py-2 rounded-full text-ink/70 hover:bg-ink/5 hidden md:inline-block text-sm">Packages</a>
+      <a href="{{ url_for('staff_beds') }}" class="px-4 py-2 rounded-full text-ink/70 hover:bg-ink/5 hidden md:inline-block text-sm">Beds</a>
+      <a href="{{ url_for('staff_team') }}" class="px-4 py-2 rounded-full text-ink/70 hover:bg-ink/5 hidden md:inline-block text-sm">Team</a>
+      <a href="{{ url_for('staff_logout') }}" class="px-4 py-2 rounded-full text-ink/70 hover:bg-ink/5 text-sm">Sign out</a>
+    </div>
+  </div>
+</nav>

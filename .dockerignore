@@ -1,0 +1,16 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+*.pyo
+sunset_lounge.db
+sunset_lounge.db-journal
+sunset_lounge.db-wal
+sunset_lounge.db-shm
+.env
+.env.local
+.DS_Store
+.vscode
+.idea
+*.swp

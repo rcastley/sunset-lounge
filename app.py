@@ -13,7 +13,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 PIN_RE = re.compile(r"^\d{4,6}$")
 
 APP_DIR = Path(__file__).parent
-DB_PATH = APP_DIR / "sunset_lounge.db"
+DB_PATH = Path(os.environ.get("SUNSET_DB_PATH") or APP_DIR / "sunset_lounge.db")
 
 LOGIN_LOCK_SECONDS = 120
 LOGIN_MAX_FAILURES = 5

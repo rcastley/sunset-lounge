@@ -89,12 +89,12 @@
   <div class="mt-4 pt-3 border-t border-sand/60 flex items-center justify-between gap-3 flex-wrap">
     {% if b.active %}
     <form method="post" action="{{ url_for('staff_beds_replace_tubes', bid=b.id) }}"
-          onsubmit="return confirm('Reset {{ b.name|e }}: tubes replaced, counter back to zero. Continue?')">
+          data-confirm="Log new tubes for {{ b.name|e }}? The hour counter resets to zero.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <button class="text-[10px] text-terracotta uppercase tracking-[0.22em] px-3 py-1.5 border border-terracotta/40 rounded-full hover:bg-terracotta/10">Tubes replaced</button>
     </form>
     <form method="post" action="{{ url_for('staff_beds_deactivate', bid=b.id) }}"
-          onsubmit="return confirm('Retire {{ b.name|e }}? Staff won\'t see it on the checkin page anymore.')">
+          data-confirm="Retire {{ b.name|e }}? Staff won't see it on the checkin page anymore.">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <button class="text-[10px] text-ember/70 hover:text-ember uppercase tracking-[0.22em]">Retire</button>
     </form>

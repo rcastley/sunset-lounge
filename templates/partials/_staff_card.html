@@ -54,7 +54,7 @@
       <div class="flex justify-end items-center">
         {% if m.id != staff.id %}
           <form method="post" action="{{ url_for('staff_team_deactivate', tid=m.id) }}"
-                onsubmit="return confirm('Mark {{ m.name|e }} inactive? Their history stays with us.')">
+                data-confirm="Mark {{ m.name|e }} inactive? Their history stays with us.">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button class="text-[10px] text-ember/70 hover:text-ember uppercase tracking-[0.22em]">Set inactive</button>
           </form>

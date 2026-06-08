@@ -11,7 +11,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
@@ -34,7 +34,7 @@
             gilt:       '#B89651',
           },
           fontFamily: {
-            display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+            display: ['"DM Serif Display"', 'ui-serif', 'Georgia', 'serif'],
             sans:    ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
           },
           boxShadow: {
@@ -85,9 +85,7 @@
       -webkit-font-smoothing: antialiased;
     }
     .font-display {
-      font-family: 'Fraunces', serif;
-      font-optical-sizing: auto;
-      font-variation-settings: 'opsz' 144;
+      font-family: 'DM Serif Display', 'Fraunces', ui-serif, Georgia, serif;
     }
     /* Soft grain texture overlay */
     .grain {
@@ -174,5 +172,66 @@
 </head>
 <body class="min-h-screen">
   {% block body %}{% endblock %}
+
+  <!-- Reusable confirmation modal. Forms opt in with data-confirm="message". -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-6">
+    <div class="absolute inset-0 bg-ink/70 backdrop-blur-sm" data-modal-close></div>
+    <div class="relative bg-cream rounded-3xl shadow-card border border-sand max-w-md w-full p-7 anim-up">
+      <p class="uppercase tracking-[0.32em] text-[10px] text-terracotta">Heads up</p>
+      <p class="font-display text-2xl text-ink leading-tight mt-2">Are you sure?</p>
+      <p id="confirm-modal-message" class="mt-3 text-ink/70 leading-snug"></p>
+      <div class="mt-6 flex justify-end gap-3">
+        <button type="button" class="btn-ghost !px-5 !py-2.5 !text-sm" data-modal-close>Cancel</button>
+        <button type="button" id="confirm-modal-confirm" class="btn-primary !px-5 !py-2.5 !text-sm">Continue</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const modal = document.getElementById('confirm-modal');
+      const message = document.getElementById('confirm-modal-message');
+      const confirmBtn = document.getElementById('confirm-modal-confirm');
+      let pending = null;
+
+      function open(form) {
+        pending = form;
+        message.textContent = form.dataset.confirm || 'This action can\'t be undone.';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+        confirmBtn.focus();
+      }
+      function close() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+        pending = null;
+      }
+
+      document.addEventListener('submit', function (e) {
+        const form = e.target.closest('form[data-confirm]');
+        if (!form || form.dataset.confirmed === '1') return;
+        e.preventDefault();
+        open(form);
+      });
+
+      confirmBtn.addEventListener('click', function () {
+        if (pending) {
+          pending.dataset.confirmed = '1';
+          const f = pending;
+          close();
+          f.submit();
+        }
+      });
+
+      modal.addEventListener('click', function (e) {
+        if (e.target.matches('[data-modal-close]')) close();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+      });
+    })();
+  </script>
 </body>
 </html>

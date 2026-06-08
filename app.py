@@ -712,6 +712,76 @@ def staff_session_edit(sid):
     return redirect(url_for("staff_client_detail", cid=cid))
 
 
+@app.route("/staff/purchases/<int:pid>/edit", methods=["POST"])
+def staff_purchase_edit(pid):
+    s = require_staff()
+    if not isinstance(s, sqlite3.Row):
+        return s
+    db = get_db()
+    row = db.execute("SELECT * FROM packages WHERE id=?", (pid,)).fetchone()
+    if not row:
+        abort(404)
+    cid = row["client_id"]
+
+    name = request.form.get("package_name", "").strip()
+    try:
+        minutes = int(request.form.get("minutes", "0"))
+    except ValueError:
+        minutes = 0
+    try:
+        price = float(request.form.get("price", "0") or 0)
+    except ValueError:
+        price = -1.0
+    purchased_at = request.form.get("purchased_at", "").strip() or row["purchased_at"]
+
+    if not name:
+        flash("Package name is required.", "error")
+    elif minutes <= 0:
+        flash("Minutes must be greater than zero.", "error")
+    elif price < 0:
+        flash("Price can't be negative.", "error")
+    else:
+        # Effect on balance = new_minutes - old_minutes; refuse if it would go negative.
+        new_balance = client_balance(cid) - row["minutes"] + minutes
+        if new_balance < 0:
+            flash(
+                f"Can't reduce — that would leave the balance at {new_balance} minutes. "
+                "The client has already used minutes from this purchase.", "error")
+        else:
+            db.execute(
+                "UPDATE packages SET package_name=?, minutes=?, price_cents=?, purchased_at=? "
+                "WHERE id=?",
+                (name, minutes, int(round(price * 100)), purchased_at, pid),
+            )
+            db.commit()
+            flash("Purchase updated.", "ok")
+    return redirect(url_for("staff_client_detail", cid=cid))
+
+
+@app.route("/staff/purchases/<int:pid>/delete", methods=["POST"])
+def staff_purchase_delete(pid):
+    s = require_staff()
+    if not isinstance(s, sqlite3.Row):
+        return s
+    db = get_db()
+    row = db.execute(
+        "SELECT client_id, minutes, package_name FROM packages WHERE id=?",
+        (pid,)).fetchone()
+    if not row:
+        abort(404)
+    cid = row["client_id"]
+    new_balance = client_balance(cid) - row["minutes"]
+    if new_balance < 0:
+        flash(
+            f"Can't delete — {row['package_name']}'s minutes have already been used. "
+            f"Removing it would leave the balance at {new_balance}.", "error")
+        return redirect(url_for("staff_client_detail", cid=cid))
+    db.execute("DELETE FROM packages WHERE id=?", (pid,))
+    db.commit()
+    flash(f"{row['package_name']} purchase removed.", "ok")
+    return redirect(url_for("staff_client_detail", cid=cid))
+
+
 @app.route("/staff/sessions/<int:sid>/delete", methods=["POST"])
 def staff_session_delete(sid):
     s = require_staff()

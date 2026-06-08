@@ -64,7 +64,7 @@
   <div class="relative mt-3 pt-3 border-t border-sand/60 flex justify-end items-center">
     {% if t.active %}
       <form method="post" action="{{ url_for('staff_packages_deactivate', tid=t.id) }}"
-            onsubmit="return confirm('Retire {{ t.name|e }}? Past sales are unaffected; staff just won\'t see it on the sell page anymore.')">
+            data-confirm="Retire {{ t.name|e }}? Past sales are unaffected; staff just won't see it on the sell page anymore.">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <button class="text-[10px] text-ember/70 hover:text-ember uppercase tracking-[0.22em]">Retire</button>
       </form>

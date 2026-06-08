@@ -8,7 +8,7 @@
   {% for c in clients %}
   <a href="{{ url_for('staff_client_detail', cid=c.id) }}"
      class="grid grid-cols-12 px-5 py-3.5 items-center hover:bg-sand/40 transition border-b border-sand/60 last:border-b-0">
-    <div class="col-span-6 font-display text-lg text-ink truncate">{{ c.first_name }} {{ c.last_name }}</div>
+    <div class="col-span-6 text-base font-semibold text-ink truncate">{{ c.first_name }} {{ c.last_name }}</div>
     <div class="col-span-3 text-ink/60 text-sm truncate">{{ c.phone or '—' }}</div>
     <div class="col-span-3 text-right">
       <span class="chip {% if c.balance > 0 %}bg-coral/15 text-terracotta{% else %}bg-ink/10 text-ink/60{% endif %}">

@@ -581,6 +581,148 @@ def staff_checkin(cid):
     )
 
 
+# Staff: reports
+RANGE_LABELS = {
+    "today": "Today",
+    "7d":    "Last 7 days",
+    "30d":   "Last 30 days",
+    "month": "This month",
+}
+
+
+def _range_where(col, rng):
+    """Inline WHERE fragment. Safe because rng is whitelisted upstream."""
+    if rng == "today":
+        return f"date({col}) = date('now')"
+    if rng == "month":
+        return f"substr({col}, 1, 7) = strftime('%Y-%m', 'now')"
+    days = "7" if rng == "7d" else "30"
+    return f"{col} >= date('now', '-{days} days')"
+
+
+@app.route("/staff/reports")
+def staff_reports():
+    s = require_staff()
+    if not isinstance(s, sqlite3.Row):
+        return s
+    rng = request.args.get("range", "7d")
+    if rng not in RANGE_LABELS:
+        rng = "7d"
+
+    db = get_db()
+    s_where = _range_where("session_at", rng)
+    p_where = _range_where("purchased_at", rng)
+    c_where = _range_where("created_at", rng)
+
+    revenue_cents = db.execute(
+        f"SELECT COALESCE(SUM(price_cents),0) FROM packages WHERE {p_where}"
+    ).fetchone()[0]
+    sessions_count, sessions_minutes = db.execute(
+        f"SELECT COUNT(*), COALESCE(SUM(minutes),0) FROM sessions WHERE {s_where}"
+    ).fetchone()
+    new_clients = db.execute(
+        f"SELECT COUNT(*) FROM clients WHERE {c_where}"
+    ).fetchone()[0]
+
+    sessions_per_bed = db.execute(
+        f"""SELECT bed AS name,
+                   COUNT(*) AS sessions,
+                   COALESCE(SUM(minutes),0) AS minutes
+            FROM sessions WHERE {s_where}
+            GROUP BY bed ORDER BY sessions DESC"""
+    ).fetchall()
+
+    top_packages = db.execute(
+        f"""SELECT package_name,
+                   COUNT(*) AS sold,
+                   COALESCE(SUM(price_cents),0) AS total_cents
+            FROM packages WHERE {p_where}
+            GROUP BY package_name ORDER BY sold DESC LIMIT 5"""
+    ).fetchall()
+
+    top_clients = db.execute(
+        f"""SELECT c.first_name, c.last_name,
+                   COUNT(*) AS sessions,
+                   COALESCE(SUM(s.minutes),0) AS minutes
+            FROM sessions s JOIN clients c ON c.id = s.client_id
+            WHERE {s_where}
+            GROUP BY c.id ORDER BY sessions DESC LIMIT 5"""
+    ).fetchall()
+
+    return render_template(
+        "staff/reports.html",
+        staff=s, rng=rng, range_label=RANGE_LABELS[rng],
+        revenue_cents=revenue_cents,
+        sessions_count=sessions_count,
+        sessions_minutes=sessions_minutes,
+        new_clients=new_clients,
+        sessions_per_bed=sessions_per_bed,
+        top_packages=top_packages,
+        top_clients=top_clients,
+    )
+
+
+# Staff: session edit / delete
+@app.route("/staff/sessions/<int:sid>/edit", methods=["POST"])
+def staff_session_edit(sid):
+    s = require_staff()
+    if not isinstance(s, sqlite3.Row):
+        return s
+    db = get_db()
+    row = db.execute("SELECT * FROM sessions WHERE id=?", (sid,)).fetchone()
+    if not row:
+        abort(404)
+
+    bed_id_raw = request.form.get("bed_id", "")
+    try:
+        minutes = int(request.form.get("minutes", "0"))
+    except ValueError:
+        minutes = 0
+    session_at = request.form.get("session_at", "").strip() or row["session_at"]
+
+    bed = None
+    if bed_id_raw.isdigit():
+        bed = db.execute(
+            "SELECT id, name FROM beds WHERE id=?", (int(bed_id_raw),)).fetchone()
+
+    cid = row["client_id"]
+    if not bed:
+        flash("Pick a bed.", "error")
+    elif minutes <= 0:
+        flash("Minutes must be greater than zero.", "error")
+    else:
+        # Treat the existing minutes as recoverable, then check the new amount.
+        available = client_balance(cid) + row["minutes"]
+        if minutes > available:
+            flash(
+                f"Only {available} minutes available after restoring this session's "
+                f"{row['minutes']} min. Sell a package first.", "error")
+        else:
+            db.execute(
+                "UPDATE sessions SET bed=?, bed_id=?, minutes=?, session_at=? WHERE id=?",
+                (bed["name"], bed["id"], minutes, session_at, sid),
+            )
+            db.commit()
+            flash("Session updated.", "ok")
+    return redirect(url_for("staff_client_detail", cid=cid))
+
+
+@app.route("/staff/sessions/<int:sid>/delete", methods=["POST"])
+def staff_session_delete(sid):
+    s = require_staff()
+    if not isinstance(s, sqlite3.Row):
+        return s
+    db = get_db()
+    row = db.execute(
+        "SELECT client_id, minutes FROM sessions WHERE id=?", (sid,)).fetchone()
+    if not row:
+        abort(404)
+    db.execute("DELETE FROM sessions WHERE id=?", (sid,))
+    db.commit()
+    flash(f"Session removed. {row['minutes']} minutes restored.", "ok")
+    return redirect(url_for("staff_client_detail", cid=row["client_id"]))
+
+
 # Staff: team management
 def _pin_is_taken(pin, exclude_id=None):
     db = get_db()
@@ -924,7 +1066,8 @@ def staff_beds():
     s = require_staff()
     if not isinstance(s, sqlite3.Row):
         return s
-    rows = get_db().execute(
+    db = get_db()
+    rows = db.execute(
         "SELECT * FROM beds ORDER BY active DESC, display_order, id"
     ).fetchall()
     beds = []
@@ -932,7 +1075,14 @@ def staff_beds():
         hours = bed_hours_used(b["id"], b["name"], b["tube_hours_baseline"],
                                b["tubes_installed_at"])
         pct = (hours / b["tube_lifetime_hours"] * 100) if b["tube_lifetime_hours"] else 0
-        beds.append({**dict(b), "hours_used": hours, "pct": pct})
+        replacements = db.execute(
+            "SELECT * FROM tube_replacements WHERE bed_id=? "
+            "ORDER BY replaced_at DESC LIMIT 10",
+            (b["id"],)).fetchall()
+        beds.append({**dict(b),
+                     "hours_used": hours, "pct": pct,
+                     "replacements": replacements,
+                     "replacement_count": len(replacements)})
     next_order = (max((b["display_order"] for b in beds if b["active"]), default=0)
                   + 10) if beds else 10
     return render_template("staff/beds.html",
@@ -995,15 +1145,28 @@ def staff_beds_replace_tubes(bid):
     if not isinstance(s, sqlite3.Row):
         return s
     db = get_db()
-    bed = db.execute("SELECT name FROM beds WHERE id=?", (bid,)).fetchone()
+    bed = db.execute(
+        "SELECT name, tube_lifetime_hours, tube_hours_baseline, tubes_installed_at "
+        "FROM beds WHERE id=?", (bid,)).fetchone()
     if not bed:
         abort(404)
+
+    hours = bed_hours_used(bid, bed["name"], bed["tube_hours_baseline"],
+                           bed["tubes_installed_at"])
+    notes = request.form.get("notes", "").strip() or None
+
+    db.execute(
+        "INSERT INTO tube_replacements "
+        "(bed_id, staff_id, hours_at_replacement, lifetime_hours_at_replacement, notes) "
+        "VALUES (?,?,?,?,?)",
+        (bid, s["id"], hours, bed["tube_lifetime_hours"], notes),
+    )
     db.execute(
         "UPDATE beds SET tube_hours_baseline=0, tubes_installed_at=? WHERE id=?",
         (datetime.utcnow().isoformat(timespec="seconds"), bid),
     )
     db.commit()
-    flash(f"{bed['name']}: new tubes logged. Counter reset to zero.", "ok")
+    flash(f"{bed['name']}: new tubes logged at {hours:.1f}hr. Counter reset to zero.", "ok")
     return redirect(url_for("staff_beds"))
 
 

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Reports — Sunset Lounge{% endblock %}
+{% block body %}
+{% include 'partials/_staff_nav.html' %}
+<main class="max-w-7xl mx-auto px-6 md:px-10 py-8">
+  <div class="flex items-end justify-between flex-wrap gap-3">
+    <div>
+      <p class="uppercase tracking-[0.35em] text-[10px] text-terracotta">Insight</p>
+      <h1 class="font-display text-3xl md:text-4xl text-ink mt-2 leading-tight">Reports.</h1>
+      <p class="text-ink/60 text-sm mt-1">{{ range_label }}.</p>
+    </div>
+    <div class="flex items-center gap-1 bg-cream rounded-full border border-sand p-1">
+      {% for k, label in [('today','Today'), ('7d','7 days'), ('30d','30 days'), ('month','Month')] %}
+      <a href="?range={{ k }}"
+         class="px-3.5 py-1.5 rounded-full text-xs uppercase tracking-[0.15em] transition
+                {% if rng == k %}bg-ink text-cream{% else %}text-ink/60 hover:bg-ink/5{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+    <div class="bg-white/80 rounded-2xl p-5 border border-sand shadow-card">
+      <p class="text-[10px] uppercase tracking-[0.25em] text-ember/70">Revenue</p>
+      <p class="font-display text-3xl md:text-4xl text-ink mt-2 leading-none">£{{ '%.0f'|format(revenue_cents/100) }}</p>
+    </div>
+    <div class="bg-ink text-cream rounded-2xl p-5 shadow-card">
+      <p class="text-[10px] uppercase tracking-[0.25em] text-peach">Sessions</p>
+      <p class="font-display text-3xl md:text-4xl mt-2 leading-none">{{ sessions_count }}</p>
+    </div>
+    <div class="bg-gradient-to-br from-coral via-terracotta to-ember text-cream rounded-2xl p-5 shadow-card">
+      <p class="text-[10px] uppercase tracking-[0.25em] text-cream/85">Minutes used</p>
+      <p class="font-display text-3xl md:text-4xl mt-2 leading-none">{{ sessions_minutes }}</p>
+    </div>
+    <div class="bg-white/80 rounded-2xl p-5 border border-sand shadow-card">
+      <p class="text-[10px] uppercase tracking-[0.25em] text-ember/70">New clients</p>
+      <p class="font-display text-3xl md:text-4xl text-ink mt-2 leading-none">{{ new_clients }}</p>
+    </div>
+  </section>
+
+  <section class="grid md:grid-cols-3 gap-4 mt-8">
+    <div class="bg-white rounded-2xl border border-sand shadow-card">
+      <div class="px-5 py-4 border-b border-sand">
+        <h2 class="font-display text-xl text-ink">Sessions per bed</h2>
+      </div>
+      {% if sessions_per_bed %}
+        {% set max_sess = sessions_per_bed[0].sessions %}
+        <ul class="p-4 space-y-3">
+          {% for b in sessions_per_bed %}
+          <li>
+            <div class="flex items-baseline justify-between text-sm">
+              <span class="text-ink font-semibold">{{ b.name }}</span>
+              <span class="text-ink/60"><span class="font-semibold text-ink">{{ b.sessions }}</span> · {{ b.minutes }} min</span>
+            </div>
+            <div class="h-1.5 bg-sand rounded-full mt-1.5 overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-blush to-terracotta rounded-full"
+                   style="width: {{ (b.sessions / max_sess * 100) if max_sess else 0 }}%;"></div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="px-5 py-8 text-ink/50 text-sm">No sessions in this range.</p>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-2xl border border-sand shadow-card">
+      <div class="px-5 py-4 border-b border-sand">
+        <h2 class="font-display text-xl text-ink">Top packages</h2>
+      </div>
+      {% if top_packages %}
+        <ul>
+          {% for p in top_packages %}
+          <li class="px-5 py-3 flex items-center justify-between border-b border-sand/60 last:border-b-0 gap-3">
+            <div class="min-w-0">
+              <p class="text-ink text-sm font-semibold truncate">{{ p.package_name }}</p>
+              <p class="text-xs text-ink/50">£{{ '%.2f'|format(p.total_cents/100) }} total</p>
+            </div>
+            <span class="text-base font-semibold text-terracotta whitespace-nowrap">×{{ p.sold }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="px-5 py-8 text-ink/50 text-sm">No packages sold in this range.</p>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-2xl border border-sand shadow-card">
+      <div class="px-5 py-4 border-b border-sand">
+        <h2 class="font-display text-xl text-ink">Most active clients</h2>
+      </div>
+      {% if top_clients %}
+        <ul>
+          {% for c in top_clients %}
+          <li class="px-5 py-3 flex items-center justify-between border-b border-sand/60 last:border-b-0 gap-3">
+            <div class="min-w-0">
+              <p class="text-ink text-sm font-semibold truncate">{{ c.first_name }} {{ c.last_name }}</p>
+              <p class="text-xs text-ink/50">{{ c.minutes }} min total</p>
+            </div>
+            <span class="text-base font-semibold text-ember whitespace-nowrap">{{ c.sessions }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="px-5 py-8 text-ink/50 text-sm">No sessions in this range.</p>
+      {% endif %}
+    </div>
+  </section>
+</main>
+{% endblock %}

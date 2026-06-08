@@ -7,7 +7,7 @@
         {{ initials }}
       </div>
       <div class="min-w-0">
-        <p class="font-display text-lg text-ink leading-tight truncate">{{ m.name }}</p>
+        <p class="text-base font-semibold text-ink leading-tight truncate">{{ m.name }}</p>
         <p class="text-[11px] text-ink/50 mt-0.5">Joined {{ m.created_at[:10] }}</p>
       </div>
     </div>
@@ -21,8 +21,8 @@
   </div>
 
   <div class="mt-3 flex items-center gap-5 text-xs text-ink/60">
-    <span><span class="font-display text-lg text-ink">{{ m.sessions_count }}</span> sessions</span>
-    <span><span class="font-display text-lg text-ink">{{ m.packages_count }}</span> packages</span>
+    <span><span class="text-base font-semibold text-ink">{{ m.sessions_count }}</span> sessions</span>
+    <span><span class="text-base font-semibold text-ink">{{ m.packages_count }}</span> packages</span>
   </div>
 
   {% if m.active %}

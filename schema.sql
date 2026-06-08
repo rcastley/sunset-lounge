@@ -61,6 +61,17 @@ CREATE TABLE IF NOT EXISTS sessions (
   recorded_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS tube_replacements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bed_id INTEGER NOT NULL REFERENCES beds(id),
+  staff_id INTEGER REFERENCES staff(id),
+  hours_at_replacement REAL NOT NULL,
+  lifetime_hours_at_replacement INTEGER NOT NULL,
+  notes TEXT,
+  replaced_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_tube_replacements_bed ON tube_replacements(bed_id, replaced_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_client ON sessions(client_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(session_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_bed ON sessions(bed_id, session_at);

@@ -7,10 +7,10 @@
       <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back
     </a>
-    <div class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-full bg-gradient-to-br from-peach via-coral to-ember shadow-sun"></div>
-      <span class="font-display text-base text-ink">Sunset Lounge</span>
-    </div>
+    <img src="{{ url_for('static', filename='images/logo.jpg') }}"
+         alt="Sunset Tanning Lounge"
+         class="logo-blend h-10 md:h-11 w-auto object-contain select-none pointer-events-none"
+         draggable="false" />
   </header>
 
   <div class="flex-1 overflow-y-auto px-8 lg:px-12">

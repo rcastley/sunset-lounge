@@ -6,6 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>{% block title %}Sunset Lounge{% endblock %}</title>
 
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}" />
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/favicon.svg') }}" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -27,6 +30,8 @@
             ember:      '#7A2E1B',
             plum:       '#2A1A2E',
             ink:        '#1F1418',
+            bronze:     '#8A6F32',
+            gilt:       '#B89651',
           },
           fontFamily: {
             display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
@@ -147,6 +152,24 @@
     .htmx-indicator { opacity: 0; transition: opacity .2s; }
     .htmx-request .htmx-indicator { opacity: 1; }
     .htmx-request.htmx-indicator { opacity: 1; }
+
+    /* The official logo is a JPG on hard white. Multiply blends the white
+       into whatever sits behind it — perfect over cream/sunset surfaces. */
+    .logo-blend {
+      mix-blend-mode: multiply;
+    }
+    /* For dark surfaces (login, sunset hero), the logo sits inside a cream
+       card so the bronze stays readable instead of being multiplied dim. */
+    .logo-card {
+      background: #FBF5EC;
+      border: 1px solid rgba(138, 111, 50, 0.25);
+      box-shadow: 0 18px 40px -20px rgba(138, 111, 50, 0.45),
+                  inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    }
+    /* A thin gilded rule for use under or beside the logo. */
+    .gilt-rule {
+      background: linear-gradient(90deg, transparent 0%, rgba(138, 111, 50, 0.6) 50%, transparent 100%);
+    }
   </style>
 </head>
 <body class="min-h-screen">

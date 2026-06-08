@@ -1,15 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Welcome to the lounge{% endblock %}
 {% block body %}
-<main class="min-h-screen sunset-bg relative overflow-hidden flex items-center justify-center px-8">
+<main class="min-h-screen sunset-bg relative overflow-hidden flex items-center justify-center px-8 py-12">
   <meta http-equiv="refresh" content="10; url={{ url_for('index') }}" />
   <div class="absolute inset-0 grain opacity-30 mix-blend-soft-light"></div>
   <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-peach/30 blur-3xl"></div>
 
   <div class="relative text-center max-w-2xl">
-    <div class="mx-auto w-48 h-48 rounded-full bg-gradient-to-br from-blush via-peach to-terracotta anim-sun-rise shadow-sun"></div>
-    <p class="uppercase tracking-[0.4em] text-cream/80 text-xs mt-12 anim-up delay-1">You're in</p>
-    <h1 class="font-display text-6xl md:text-7xl text-cream mt-4 anim-up delay-2 leading-tight">
+    <div class="inline-block rounded-3xl px-8 py-6 logo-card anim-sun-rise">
+      <img src="{{ url_for('static', filename='images/logo.jpg') }}"
+           alt="Sunset Tanning Lounge"
+           class="logo-blend w-44 md:w-52 h-auto object-contain select-none pointer-events-none"
+           draggable="false" />
+    </div>
+
+    <p class="uppercase tracking-[0.4em] text-cream/85 text-xs mt-10 anim-up delay-1">You're in</p>
+    <h1 class="font-display text-5xl md:text-7xl text-cream mt-4 anim-up delay-2 leading-tight">
       Welcome, <em class="italic">{{ name }}</em>.
     </h1>
     <p class="mt-6 text-xl text-cream/85 anim-up delay-3 leading-relaxed">

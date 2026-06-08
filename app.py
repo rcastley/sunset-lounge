@@ -8,6 +8,7 @@ from pathlib import Path
 
 from flask import (Flask, abort, flash, g, make_response, redirect,
                    render_template, request, session, url_for)
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
 PIN_RE = re.compile(r"^\d{4,6}$")
@@ -70,6 +71,13 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("SUNSET_COOKIE_SECURE") == "1",
 )
+
+# Behind a reverse proxy (Nginx Proxy Manager, Caddy, Traefik) the container
+# only ever sees plain HTTP. Trust one hop of X-Forwarded-* so Flask correctly
+# sees the request as HTTPS, sets session cookies that the browser will
+# actually accept, and generates URLs against the public host.
+if os.environ.get("SUNSET_TRUST_PROXY", "1") == "1":
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
 def csrf_token():

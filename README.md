@@ -46,6 +46,20 @@ hostname -I              # Linux
 
 Then on each iPad open `http://<computer-ip>:5800/` for the customer kiosk or `http://<computer-ip>:5800/staff` for staff. Use iPad Guided Access or a kiosk browser to lock each iPad on the intended page.
 
+### Behind a reverse proxy (Nginx Proxy Manager, Caddy, Traefik)
+
+The app trusts one hop of `X-Forwarded-Proto`, `X-Forwarded-Host`, `X-Forwarded-For`, and `X-Forwarded-Prefix` by default so Flask sees the original HTTPS request even though the container only receives plain HTTP from the proxy. This prevents the "too many redirects" loop you get otherwise, especially when `SUNSET_COOKIE_SECURE=1` is on.
+
+If you're not behind a proxy, or you want to disable that trust for any reason, set `SUNSET_TRUST_PROXY=0` in `.env`.
+
+When terminating TLS on the proxy, also set this in `.env`:
+
+```
+SUNSET_COOKIE_SECURE=1
+```
+
+so the session cookie is only ever sent over HTTPS.
+
 ### Common commands
 
 ```sh

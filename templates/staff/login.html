@@ -41,6 +41,9 @@
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l5-5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8l-5-5z M14 9l-4 4 m0-4l4 4"/></svg>
         </button>
       </div>
+      <button id="pinSubmit" type="submit" disabled class="mt-4 w-full h-12 rounded-2xl bg-peach text-ink font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition">
+        Sign in
+      </button>
     </form>
   </div>
 
@@ -51,6 +54,7 @@
       const dots = document.getElementById("dots");
       const input = document.getElementById("pinInput");
       const form = document.getElementById("pinForm");
+      const submit = document.getElementById("pinSubmit");
 
       function render() {
         dots.innerHTML = "";
@@ -62,14 +66,9 @@
           dots.appendChild(d);
         }
         input.value = pin;
+        submit.disabled = pin.length < MIN;
       }
       render();
-
-      function submitIfReady() {
-        if (pin.length >= MIN) {
-          setTimeout(() => form.submit(), 140);
-        }
-      }
 
       document.querySelectorAll(".key").forEach(b => {
         b.addEventListener("click", () => {
@@ -78,14 +77,13 @@
           else if (k === "clear") pin = "";
           else if (pin.length < MAX) pin += k;
           render();
-          if (k !== "back" && k !== "clear") submitIfReady();
         });
       });
 
       document.addEventListener("keydown", e => {
         if (/^[0-9]$/.test(e.key)) {
           if (pin.length < MAX) pin += e.key;
-          render(); submitIfReady();
+          render();
         } else if (e.key === "Backspace") {
           pin = pin.slice(0, -1); render();
         } else if (e.key === "Enter" && pin.length >= MIN) {

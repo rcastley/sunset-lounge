@@ -4,6 +4,7 @@ import secrets
 import sqlite3
 import time
 from datetime import datetime, date
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 
 from flask import (Flask, abort, flash, g, make_response, redirect,
@@ -166,6 +167,30 @@ def client_balance(client_id):
         "SELECT COALESCE(SUM(minutes),0) FROM sessions WHERE client_id=?",
         (client_id,)).fetchone()[0]
     return bought - used
+
+
+def parse_price_cents(value):
+    try:
+        price = Decimal((value or "0").strip())
+        if not price.is_finite():
+            return None, "Price must be a number."
+        if price < 0:
+            return None, "Price can't be negative."
+        cents = int((price * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    except (InvalidOperation, ValueError, OverflowError):
+        return None, "Price must be a number."
+    return cents, None
+
+
+def parse_datetime_local(value, fallback=None):
+    raw = (value or "").strip()
+    if not raw:
+        return fallback, None
+    try:
+        parsed = datetime.strptime(raw, "%Y-%m-%dT%H:%M")
+    except ValueError:
+        return None, "Use a valid date and time."
+    return parsed.strftime("%Y-%m-%dT%H:%M"), None
 
 
 def current_staff():
@@ -504,10 +529,10 @@ def staff_sell(cid):
         else:
             try:
                 minutes = int(request.form.get("minutes", "0"))
-                price = float(request.form.get("price", "0") or 0)
-                price_cents = int(round(price * 100))
             except ValueError:
-                error = "Minutes and price must be numbers."
+                error = "Minutes must be a whole number."
+            if not error:
+                price_cents, error = parse_price_cents(request.form.get("price", "0"))
             if not error and minutes <= 0:
                 error = "Minutes must be greater than zero."
 
@@ -551,13 +576,17 @@ def staff_checkin(cid):
             minutes = int(request.form.get("minutes", "0"))
         except ValueError:
             minutes = 0
-        session_at = (request.form.get("session_at")
-                      or datetime.now().strftime("%Y-%m-%dT%H:%M"))
+        session_at, date_error = parse_datetime_local(
+            request.form.get("session_at"),
+            fallback=datetime.now().strftime("%Y-%m-%dT%H:%M"),
+        )
 
         if not chosen:
             error = "Pick a bed."
         elif minutes <= 0:
             error = "Enter how many minutes were used."
+        elif date_error:
+            error = date_error
         elif minutes > balance:
             error = (f"{client['first_name']} only has {balance} minutes available. "
                      "Sell a package first.")
@@ -691,7 +720,7 @@ def staff_session_edit(sid):
         minutes = int(request.form.get("minutes", "0"))
     except ValueError:
         minutes = 0
-    session_at = request.form.get("session_at", "").strip() or row["session_at"]
+    session_at, date_error = parse_datetime_local(request.form.get("session_at"))
 
     bed = None
     if bed_id_raw.isdigit():
@@ -703,17 +732,25 @@ def staff_session_edit(sid):
         flash("Pick a bed.", "error")
     elif minutes <= 0:
         flash("Minutes must be greater than zero.", "error")
+    elif date_error:
+        flash(date_error, "error")
     else:
-        # Treat the existing minutes as recoverable, then check the new amount.
+        db.execute("BEGIN IMMEDIATE")
+        row = db.execute("SELECT * FROM sessions WHERE id=?", (sid,)).fetchone()
+        if not row:
+            db.rollback()
+            abort(404)
+        cid = row["client_id"]
         available = client_balance(cid) + row["minutes"]
         if minutes > available:
+            db.rollback()
             flash(
                 f"Only {available} minutes available after restoring this session's "
                 f"{row['minutes']} min. Sell a package first.", "error")
         else:
             db.execute(
                 "UPDATE sessions SET bed=?, bed_id=?, minutes=?, session_at=? WHERE id=?",
-                (bed["name"], bed["id"], minutes, session_at, sid),
+                (bed["name"], bed["id"], minutes, session_at or row["session_at"], sid),
             )
             db.commit()
             flash("Session updated.", "ok")
@@ -736,22 +773,27 @@ def staff_purchase_edit(pid):
         minutes = int(request.form.get("minutes", "0"))
     except ValueError:
         minutes = 0
-    try:
-        price = float(request.form.get("price", "0") or 0)
-    except ValueError:
-        price = -1.0
-    purchased_at = request.form.get("purchased_at", "").strip() or row["purchased_at"]
+    price_cents, price_error = parse_price_cents(request.form.get("price", "0"))
+    purchased_at, date_error = parse_datetime_local(request.form.get("purchased_at"))
 
     if not name:
         flash("Package name is required.", "error")
     elif minutes <= 0:
         flash("Minutes must be greater than zero.", "error")
-    elif price < 0:
-        flash("Price can't be negative.", "error")
+    elif price_error:
+        flash(price_error, "error")
+    elif date_error:
+        flash(date_error, "error")
     else:
-        # Effect on balance = new_minutes - old_minutes; refuse if it would go negative.
+        db.execute("BEGIN IMMEDIATE")
+        row = db.execute("SELECT * FROM packages WHERE id=?", (pid,)).fetchone()
+        if not row:
+            db.rollback()
+            abort(404)
+        cid = row["client_id"]
         new_balance = client_balance(cid) - row["minutes"] + minutes
         if new_balance < 0:
+            db.rollback()
             flash(
                 f"Can't reduce — that would leave the balance at {new_balance} minutes. "
                 "The client has already used minutes from this purchase.", "error")
@@ -759,7 +801,7 @@ def staff_purchase_edit(pid):
             db.execute(
                 "UPDATE packages SET package_name=?, minutes=?, price_cents=?, purchased_at=? "
                 "WHERE id=?",
-                (name, minutes, int(round(price * 100)), purchased_at, pid),
+                (name, minutes, price_cents, purchased_at or row["purchased_at"], pid),
             )
             db.commit()
             flash("Purchase updated.", "ok")
@@ -778,8 +820,17 @@ def staff_purchase_delete(pid):
     if not row:
         abort(404)
     cid = row["client_id"]
+    db.execute("BEGIN IMMEDIATE")
+    row = db.execute(
+        "SELECT client_id, minutes, package_name FROM packages WHERE id=?",
+        (pid,)).fetchone()
+    if not row:
+        db.rollback()
+        abort(404)
+    cid = row["client_id"]
     new_balance = client_balance(cid) - row["minutes"]
     if new_balance < 0:
+        db.rollback()
         flash(
             f"Can't delete — {row['package_name']}'s minutes have already been used. "
             f"Removing it would leave the balance at {new_balance}.", "error")
